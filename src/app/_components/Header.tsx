@@ -7,7 +7,7 @@ import Link from "next/link";
 const Header: React.FC = () => {
   return (
     <header>
-      <div className="bg-slate-800 py-2 font-bold text-white">
+      <div className="bg-teal-600 py-2 font-bold text-white">
         <div
           className={twMerge(
             "mx-4 max-w-2xl md:mx-auto",
@@ -26,7 +26,10 @@ const Header: React.FC = () => {
             </Link>
           </div>
           <div>
-            <Link href="/about">About</Link>
+            <Link href="/about">
+              <FontAwesomeIcon icon={faFish} className="mr-1" />
+              About
+            </Link>
           </div>
         </div>
       </div>

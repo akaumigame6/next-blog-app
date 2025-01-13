@@ -1,9 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import type { PostApiResponse } from "@/app/_types/PostApiResponse";
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { twMerge } from "tailwind-merge";
+import { Category } from "@/app/_types/Category";
 import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 
 // カテゴリをフェッチしたときのレスポンスのデータ型
@@ -23,7 +26,7 @@ type SelectableCategory = {
 
 //  記事の新規作成 (追加) のページ
 const Page: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fetchErrorMsg, setFetchErrorMsg] = useState<string | null>(null);
 
@@ -32,6 +35,9 @@ const Page: React.FC = () => {
   const [newPostContent, setNewPostContent] = useState("");
   const [newPostImageURL, setNewPostImageURL] = useState("");
 
+  //  動的ルートパラメータから id を取得 （URL:/admin/categories/[id]）
+  const { id } = useParams() as { id: string };
+
   const router = useRouter();
 
   // カテゴリ配列 (State)。取得中と取得失敗時は null、既存カテゴリが0個なら []
@@ -39,27 +45,22 @@ const Page: React.FC = () => {
     SelectableCategory[] | null
   >(null);
 
-  // コンポーネントがマウントされたとき (初回レンダリングのとき) に1回だけ実行
+  //編集前の記事データ
+  const [currentPost, setCurrentPost] = useState<PostApiResponse | null>(null);
+
+  // カテゴリの一覧の取得
   useEffect(() => {
-    // ウェブAPI (/api/categories) からカテゴリの一覧をフェッチする関数の定義
     const fetchCategories = async () => {
       try {
-        setIsLoading(true);
-
-        // フェッチ処理の本体
         const requestUrl = "/api/categories";
         const res = await fetch(requestUrl, {
           method: "GET",
           cache: "no-store",
         });
-
-        // レスポンスのステータスコードが200以外の場合 (カテゴリのフェッチに失敗した場合)
         if (!res.ok) {
           setCheckableCategories(null);
-          throw new Error(`${res.status}: ${res.statusText}`); // -> catch節に移動
+          throw new Error(`${res.status}: ${res.statusText}`);
         }
-
-        // レスポンスのボディをJSONとして読み取りカテゴリ配列 (State) にセット
         const apiResBody = (await res.json()) as CategoryApiResponse[];
         setCheckableCategories(
           apiResBody.map((body) => ({
@@ -75,14 +76,64 @@ const Page: React.FC = () => {
             : `予期せぬエラーが発生しました ${error}`;
         console.error(errorMsg);
         setFetchErrorMsg(errorMsg);
-      } finally {
-        // 成功した場合も失敗した場合もローディング状態を解除
-        setIsLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // 投稿記事の取得
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const requestUrl = `/api/posts/${id}`;
+        const res = await fetch(requestUrl, {
+          method: "GET",
+          cache: "no-store",
+        });
+        if (!res.ok) {
+          setCurrentPost(null);
+          throw new Error(`${res.status}: ${res.statusText}`);
+        }
+        const apiResBody = (await res.json()) as PostApiResponse;
+        setCurrentPost(apiResBody);
+      } catch (error) {
+        const errorMsg =
+          error instanceof Error
+            ? `投稿記事の取得に失敗しました: ${error.message}`
+            : `予期せぬエラーが発生しました ${error}`;
+        console.error(errorMsg);
+        setFetchErrorMsg(errorMsg);
       }
     };
 
-    fetchCategories();
-  }, []);
+    fetchPost();
+  }, [id]);
+
+  // コンポーネントがマウントされたとき (初回レンダリングのとき) に1回だけ実行
+  useEffect(() => {
+    // 初期化済みなら戻る
+    if (isInitialized) return;
+
+    // 投稿記事 または カテゴリ一覧 が取得できていないなら戻る
+    if (!currentPost || !checkableCategories) return;
+
+    // 投稿記事のタイトル、本文、カバーイメージURLを更新
+    setNewPostTitle(currentPost.title);
+    setNewPostContent(currentPost.content);
+    setNewPostImageURL(currentPost.coverImageURL);
+
+    // カテゴリの選択状態を更新
+    const selectedIds = new Set(
+      currentPost.categories.map((c) => c.category.id)
+    );
+    setCheckableCategories(
+      checkableCategories.map((category) => ({
+        ...category,
+        isSelect: selectedIds.has(category.id),
+      }))
+    );
+    setIsInitialized(true);
+  }, [isInitialized, currentPost, checkableCategories]);
 
   // チェックボックスの状態 (State) を更新する関数
   const switchCategoryState = (categoryId: string) => {
@@ -129,7 +180,7 @@ const Page: React.FC = () => {
     e.preventDefault(); // これを実行しないと意図せずページがリロードされるので注意
     setIsSubmitting(true);
 
-    //ウェブAPI (/api/admin/posts) にPOSTリクエストを送信する処理
+    //ウェブAPI (/api/admin/posts) にPUTリクエストを送信する処理
     try {
       const requestBody = {
         title: newPostTitle,
@@ -139,10 +190,10 @@ const Page: React.FC = () => {
           ? checkableCategories.filter((c) => c.isSelect).map((c) => c.id)
           : [],
       };
-      const requestUrl = "/api/admin/posts";
+      const requestUrl = `/api/admin/posts/${id}`;
       console.log(`${requestUrl} => ${JSON.stringify(requestBody, null, 2)}`);
       const res = await fetch(requestUrl, {
-        method: "POST",
+        method: "PUT",
         cache: "no-store",
         headers: {
           "Content-Type": "application/json",
@@ -153,14 +204,43 @@ const Page: React.FC = () => {
       if (!res.ok) {
         throw new Error(`${res.status}: ${res.statusText}`); // -> catch節に移動
       }
-
-      const postResponse = await res.json();
       setIsSubmitting(false);
-      router.push(`/posts/${postResponse.id}`); // 投稿記事の詳細ページに移動
+      router.push(`/posts/${id}`); // 投稿記事の詳細ページに移動
     } catch (error) {
       const errorMsg =
         error instanceof Error
-          ? `投稿記事のPOSTリクエストに失敗しました\n${error.message}`
+          ? `投稿記事のPUTリクエストに失敗しました\n${error.message}`
+          : `予期せぬエラーが発生しました\n${error}`;
+      console.error(errorMsg);
+      window.alert(errorMsg);
+      setIsSubmitting(false);
+    }
+  };
+
+  // 「削除」のボタンが押下されたときにコールされる関数
+  const handleDelete = async () => {
+    // prettier-ignore
+    if (!window.confirm(`投稿記事「${currentPost?.title}」を本当に削除しますか？`)) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const requestUrl = `/api/admin/posts/${id}`;
+      const res = await fetch(requestUrl, {
+        method: "DELETE",
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${res.statusText}`);
+      }
+      // カテゴリの一覧ページに移動
+      router.replace("/admin/posts");
+    } catch (error) {
+      const errorMsg =
+        error instanceof Error
+          ? `投稿記事のDELETEリクエストに失敗しました\n${error.message}`
           : `予期せぬエラーが発生しました\n${error}`;
       console.error(errorMsg);
       window.alert(errorMsg);
@@ -169,7 +249,7 @@ const Page: React.FC = () => {
   };
 
   // カテゴリをウェブAPIから取得中の画面
-  if (isLoading) {
+  if (!isInitialized) {
     return (
       <div className="text-gray-500">
         <FontAwesomeIcon icon={faSpinner} className="mr-1 animate-spin" />
@@ -186,7 +266,7 @@ const Page: React.FC = () => {
   // カテゴリ取得完了後の画面
   return (
     <main>
-      <div className="mb-4 text-2xl font-bold">投稿記事の新規作成</div>
+      <div className="mb-4 text-2xl font-bold">投稿記事の編集</div>
 
       {isSubmitting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -282,7 +362,18 @@ const Page: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end space-x-3">
+          <button
+            type="button"
+            className={twMerge(
+              "rounded-md px-5 py-1 font-bold",
+              "bg-red-500 text-white hover:bg-red-600",
+              "disabled:cursor-not-allowed disabled:opacity-50"
+            )}
+            onClick={handleDelete}
+          >
+            記事を削除
+          </button>
           <button
             type="submit"
             className={twMerge(
@@ -294,7 +385,7 @@ const Page: React.FC = () => {
               isSubmitting || newPostTitleError !== "" || newPostTitle === ""
             }
           >
-            記事を作成
+            記事を変更
           </button>
         </div>
       </form>

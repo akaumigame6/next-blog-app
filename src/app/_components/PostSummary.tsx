@@ -1,7 +1,7 @@
 "use client";
 import type { Post } from "@/app/_types/Post";
-import { twMerge } from "tailwind-merge";
 import dayjs from "dayjs";
+import { twMerge } from "tailwind-merge";
 import DOMPurify from "isomorphic-dompurify";
 import Link from "next/link";
 
@@ -15,21 +15,24 @@ const PostSummary: React.FC<Props> = (props) => {
   const safeHTML = DOMPurify.sanitize(post.content, {
     ALLOWED_TAGS: ["b", "strong", "i", "em", "u", "br"],
   });
+  post.categories.map(function (Category) {
+    console.log(Category.name);
+  });
   return (
-    <div className="border border-slate-400 p-3">
+    <div className="rounded-md border border-slate-400 bg-slate-100 p-3">
       <div className="flex items-center justify-between">
         <div>{dayjs(post.createdAt).format(dtFmt)}</div>
         <div className="flex space-x-1.5">
-          {post.categories.map((category) => (
+          {post.categories.map((Category) => (
             <div
-              key={category.id}
+              key={Category.id}
               className={twMerge(
                 "rounded-md px-2 py-0.5",
                 "text-xs font-bold",
                 "border border-slate-400 text-slate-500"
               )}
             >
-              {category.name}
+              {Category.name}
             </div>
           ))}
         </div>

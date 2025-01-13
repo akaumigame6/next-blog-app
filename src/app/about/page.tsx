@@ -4,7 +4,7 @@ import { twMerge } from "tailwind-merge";
 
 const Page: React.FC = () => {
   return (
-    <main>
+    <main className="text-slate-100">
       <div className="mb-5 text-2xl font-bold">About</div>
 
       <div
@@ -19,7 +19,7 @@ const Page: React.FC = () => {
           width={350}
           height={350}
           priority
-          className="rounded-full border-4 border-slate-500 p-1.5"
+          className="rounded-full border-4 border-slate-200 p-1.5"
         />
       </div>
 

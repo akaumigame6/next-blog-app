@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation"; // ◀ 注目
+import { useParams } from "next/navigation";
 
 import type { Post } from "@/app/_types/Post";
+import type { PostApiResponse } from "@/app/_types/PostApiResponse";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
@@ -18,26 +19,34 @@ const Page: React.FC = () => {
   // 動的ルートパラメータから id を取得 （URL:/posts/[id]）
   const { id } = useParams() as { id: string };
 
-  const apiBaseEp = process.env.NEXT_PUBLIC_MICROCMS_BASE_EP!;
-  const apiKey = process.env.NEXT_PUBLIC_MICROCMS_API_KEY!;
-
   useEffect(() => {
     const fetchPosts = async () => {
       setIsLoading(true);
       try {
-        const requestUrl = `${apiBaseEp}/posts/${id}`;
+        const requestUrl = `/api/posts/${id}`;
         const response = await fetch(requestUrl, {
           method: "GET",
           cache: "no-store",
-          headers: {
-            "X-MICROCMS-API-KEY": apiKey,
-          },
         });
         if (!response.ok) {
           throw new Error("データの取得に失敗しました");
         }
-        const data = await response.json();
-        setPost(data as Post);
+        const postApiResponse: PostApiResponse = await response.json();
+        setPost({
+          id: postApiResponse.id,
+          title: postApiResponse.title,
+          content: postApiResponse.content,
+          coverImage: {
+            url: postApiResponse.coverImageURL,
+            width: 1000,
+            height: 1000,
+          },
+          createdAt: postApiResponse.createdAt,
+          categories: postApiResponse.categories.map((category) => ({
+            id: category.category.id,
+            name: category.category.name,
+          })),
+        });
       } catch (e) {
         setFetchError(
           e instanceof Error ? e.message : "予期せぬエラーが発生しました"
@@ -47,7 +56,7 @@ const Page: React.FC = () => {
       }
     };
     fetchPosts();
-  }, [apiBaseEp, apiKey, id]);
+  }, [id]);
 
   if (fetchError) {
     return <div>{fetchError}</div>;
@@ -56,7 +65,7 @@ const Page: React.FC = () => {
   // 投稿データの取得中は「Loading...」を表示
   if (isLoading) {
     return (
-      <div className="text-gray-500">
+      <div className="text-slate-50">
         <FontAwesomeIcon icon={faSpinner} className="mr-1 animate-spin" />
         Loading...
       </div>
@@ -75,7 +84,7 @@ const Page: React.FC = () => {
 
   return (
     <main>
-      <div className="space-y-2">
+      <div className="space-y-2 text-slate-50">
         <div className="mb-2 text-2xl font-bold">{post.title}</div>
         <div>
           <Image
