@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { Post } from "@/app/_types/Post";
 import type { PostApiResponse } from "@/app/_types/PostApiResponse";
 import APIPostSummary from "@/app/_components/APIPostSummary";
+
 import { twMerge } from "tailwind-merge";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
@@ -62,7 +63,7 @@ const Page: React.FC = () => {
 
   if (!posts) {
     return (
-      <div className="text-gray-500">
+      <div className="text-slate-50">
         <FontAwesomeIcon icon={faSpinner} className="mr-1 animate-spin" />
         Loading...
       </div>

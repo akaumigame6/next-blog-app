@@ -1,5 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import type { Post } from "@/app/_types/Post";
+import type { PostApiResponse } from "@/app/_types/PostApiResponse";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { twMerge } from "tailwind-merge";
@@ -22,6 +24,7 @@ const Page: React.FC = () => {
 
   // カテゴリ配列 (State)。取得中と取得失敗時は null、既存カテゴリが0個なら []
   const [categories, setCategories] = useState<Category[] | null>(null);
+  const [posts, setPosts] = useState<Post[] | null>(null);
 
   // ウェブAPI (/api/categories) からカテゴリの一覧をフェッチする関数の定義
   const fetchCategories = async () => {
@@ -67,10 +70,69 @@ const Page: React.FC = () => {
     fetchCategories();
   }, []);
 
+  const fetchPosts = useCallback(async () => {
+    try {
+      const requestUrl = `/api/posts`;
+      const response = await fetch(requestUrl, {
+        method: "GET",
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        throw new Error("データの取得に失敗しました");
+      }
+      const postResponse: PostApiResponse[] = await response.json();
+      setPosts(
+        postResponse.map((rawPost) => ({
+          id: rawPost.id,
+          title: rawPost.title,
+          content: rawPost.content,
+          coverImage: {
+            url: rawPost.coverImageURL,
+            width: 1000,
+            height: 1000,
+          },
+          createdAt: rawPost.createdAt,
+          categories: rawPost.categories.map((category) => ({
+            id: category.category.id,
+            name: category.category.name,
+          })),
+        }))
+      );
+    } catch (e) {
+      setFetchErrorMsg(
+        e instanceof Error ? e.message : "予期せぬエラーが発生しました"
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  // カテゴリの使用数をカウントする関数
+  const countPostPerCategory = (posts: Post[]) => {
+    const categoryCount: { [key: string]: number } = {};
+
+    posts.forEach((post) => {
+      post.categories.forEach((category) => {
+        if (categoryCount[category.id]) {
+          categoryCount[category.id]++;
+        } else {
+          categoryCount[category.id] = 1;
+        }
+      });
+    });
+
+    return categoryCount;
+  };
+
+  // カテゴリの使用数をカウント
+  const categoryUsageCounts = posts ? countPostPerCategory(posts) : {};
+
   // カテゴリをウェブAPIから取得中の画面
   if (isLoading) {
     return (
-      <div className="text-gray-500">
+      <div className="text-slate-50">
         <FontAwesomeIcon icon={faSpinner} className="mr-1 animate-spin" />
         Loading...
       </div>
@@ -115,7 +177,7 @@ const Page: React.FC = () => {
   // カテゴリ取得完了後の画面
   return (
     <main>
-      <div className="text-2xl font-bold">カテゴリの管理</div>
+      <div className="text-2xl font-bold text-slate-50">カテゴリの管理</div>
 
       <div className="mb-3 flex items-end justify-end">
         <Link href="/admin/categories/new">
@@ -133,7 +195,7 @@ const Page: React.FC = () => {
       </div>
 
       {categories.length === 0 ? (
-        <div className="text-gray-500">
+        <div className="text-slate-50">
           （カテゴリは1個も作成されていません）
         </div>
       ) : (
@@ -145,7 +207,9 @@ const Page: React.FC = () => {
                 className={twMerge(
                   "border border-slate-400 p-3",
                   "flex items-center justify-between",
-                  "font-bold"
+                  "font-bold",
+                  "rounded-md",
+                  "bg-slate-100"
                 )}
               >
                 <div>
@@ -153,6 +217,7 @@ const Page: React.FC = () => {
                     {category.name}
                   </Link>
                 </div>
+                <div>記事数:{categoryUsageCounts[category.id] || 0}個</div>
                 <div className="flex space-x-2">
                   <Link href={`/admin/categories/${category.id}`}>
                     <button

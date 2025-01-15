@@ -1,5 +1,7 @@
 "use client";
 import type { Post } from "@/app/_types/Post";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 import { useParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { twMerge } from "tailwind-merge";
@@ -18,11 +20,13 @@ const PostSummary: React.FC<Props> = (props) => {
   const safeHTML = DOMPurify.sanitize(post.content, {
     ALLOWED_TAGS: ["b", "strong", "i", "em", "u", "br"],
   });
-  post.categories.map(function (Category) {
-    console.log(Category.name);
-  });
+  // post.categories.map(function (Category) {
+  //   console.log(Category.name);
+  // });
 
   const router = useRouter();
+
+  let change = 1;
 
   // 「削除」のボタンが押下されたときにコールされる関数
   const handleDelete = async () => {
@@ -61,13 +65,16 @@ const PostSummary: React.FC<Props> = (props) => {
   return (
     <div className="rounded-md border border-slate-400 bg-slate-100 p-3">
       <div className="flex items-center justify-between">
-        <div>{dayjs(post.createdAt).format(dtFmt)}</div>
         <div className="flex space-x-1.5">
+          <FontAwesomeIcon icon={faPenToSquare} className="mr-1" />
+          <div>{dayjs(post.createdAt).format(dtFmt)}</div>
+        </div>
+        <div className="flex max-w-64 flex-wrap space-x-1">
           {post.categories.map((Category) => (
             <div
               key={Category.id}
               className={twMerge(
-                "rounded-md px-2 py-0.5",
+                "my-0.5 rounded-md px-2 py-0.5",
                 "text-xs font-bold",
                 "border border-slate-400 text-slate-500"
               )}
@@ -80,7 +87,7 @@ const PostSummary: React.FC<Props> = (props) => {
       <Link href={`/posts/${post.id}`}>
         <div className="mb-1 text-lg font-bold">{post.title}</div>
         <div
-          className="line-clamp-3"
+          className="my-2 line-clamp-3"
           dangerouslySetInnerHTML={{ __html: safeHTML }}
         />
       </Link>

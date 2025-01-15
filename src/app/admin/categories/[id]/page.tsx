@@ -178,7 +178,7 @@ const Page: React.FC = () => {
   // カテゴリの一覧を取得中の画面
   if (isLoading) {
     return (
-      <div className="text-gray-500">
+      <div className="text-slate-50">
         <FontAwesomeIcon icon={faSpinner} className="mr-1 animate-spin" />
         Loading...
       </div>
@@ -201,7 +201,23 @@ const Page: React.FC = () => {
 
   return (
     <main>
-      <div className="mb-4 text-2xl font-bold">カテゴリの編集・削除</div>
+      <div className="mb-4 text-2xl font-bold text-slate-50">
+        カテゴリの編集・削除
+      </div>
+      <div className="mb-3 flex items-end justify-end">
+        <Link href="/admin/categories">
+          <button
+            type="submit"
+            className={twMerge(
+              "rounded-md px-5 py-1 font-bold",
+              "bg-teal-500 text-white hover:bg-teal-700",
+              "disabled:cursor-not-allowed disabled:opacity-50"
+            )}
+          >
+            変更の破棄
+          </button>
+        </Link>
+      </div>
 
       <form
         onSubmit={handleSubmit}
@@ -209,12 +225,14 @@ const Page: React.FC = () => {
       >
         <div className="space-y-6">
           <div className="space-y-1">
-            <div className="block font-bold">現在のカテゴリの名前</div>
-            <div className="text-gray-500">{currentCategoryName}</div>
+            <div className="block font-bold text-slate-50">
+              現在のカテゴリの名前
+            </div>
+            <div className="text-slate-200">{currentCategoryName}</div>
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="name" className="block font-bold">
+            <label htmlFor="name" className="block font-bold text-slate-50">
               新しいカテゴリの名前
             </label>
             <input
@@ -270,14 +288,19 @@ const Page: React.FC = () => {
         </div>
       </form>
 
-      <div className="mb-2 text-2xl font-bold">既存のカテゴリの一覧</div>
+      <Link href="/admin/categories">
+        <div className="mb-2 text-2xl font-bold text-slate-50">
+          既存のカテゴリの一覧
+        </div>
+      </Link>
+
       {categories.length === 0 ? (
-        <div className="text-gray-500">
+        <div className="text-slate-50">
           （カテゴリは1個も作成されていません）
         </div>
       ) : (
         <div>
-          <div className="mb-2">
+          <div className="mb-2 text-slate-50">
             クリックすると各カテゴリの名前編集・削除画面に移動します。
           </div>
           <div className="flex flex-wrap gap-2">
@@ -286,8 +309,9 @@ const Page: React.FC = () => {
                 key={category.id}
                 className={twMerge(
                   "rounded-md px-2 py-0.5",
-                  "border border-slate-400 text-slate-500",
-                  currentCategoryName === category.name && " bg-gray-100"
+                  "border border-slate-400 text-slate-50",
+                  currentCategoryName === category.name &&
+                    " bg-gray-300 text-black"
                 )}
               >
                 <Link href={`/admin/categories/${category.id}`}>
@@ -306,7 +330,7 @@ const Page: React.FC = () => {
               icon={faSpinner}
               className="mr-2 animate-spin text-gray-500"
             />
-            <div className="flex items-center text-gray-500">処理中...</div>
+            <div className="flex items-center text-slate-50">処理中...</div>
           </div>
         </div>
       )}

@@ -125,7 +125,7 @@ const Page: React.FC = () => {
   // カテゴリをウェブAPIから取得中の画面
   if (isLoading) {
     return (
-      <div className="text-gray-500">
+      <div className="text-slate-50">
         <FontAwesomeIcon icon={faSpinner} className="mr-1 animate-spin" />
         Loading...
       </div>
@@ -140,7 +140,23 @@ const Page: React.FC = () => {
   // カテゴリ取得完了後の画面
   return (
     <main>
-      <div className="mb-4 text-2xl font-bold">カテゴリの新規作成</div>
+      <div className="mb-4 text-2xl font-bold text-slate-50">
+        カテゴリの新規作成
+      </div>
+      <div className="mb-3 flex items-end justify-end">
+        <Link href="/admin/categories">
+          <button
+            type="submit"
+            className={twMerge(
+              "rounded-md px-5 py-1 font-bold",
+              "bg-teal-500 text-white hover:bg-teal-700",
+              "disabled:cursor-not-allowed disabled:opacity-50"
+            )}
+          >
+            カテゴリ一覧にもどる
+          </button>
+        </Link>
+      </div>
 
       {isSubmitting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -149,7 +165,7 @@ const Page: React.FC = () => {
               icon={faSpinner}
               className="mr-2 animate-spin text-gray-500"
             />
-            <div className="flex items-center text-gray-500">処理中...</div>
+            <div className="flex items-center text-slate-50">処理中...</div>
           </div>
         </div>
       )}
@@ -159,7 +175,7 @@ const Page: React.FC = () => {
         className={twMerge("mb-4 space-y-4", isSubmitting && "opacity-50")}
       >
         <div className="space-y-1">
-          <label htmlFor="name" className="block font-bold">
+          <label htmlFor="name" className="block font-bold text-slate-50">
             名前
           </label>
           <input
@@ -203,14 +219,18 @@ const Page: React.FC = () => {
         </div>
       </form>
 
-      <div className="mb-2 text-2xl font-bold">作成されたカテゴリの一覧</div>
+      <Link href="/admin/categories">
+        <div className="mb-2 text-2xl font-bold text-slate-50">
+          既存のカテゴリの一覧
+        </div>
+      </Link>
       {categories.length === 0 ? (
-        <div className="text-gray-500">
+        <div className="text-slate-50">
           （カテゴリは1個も作成されていません）
         </div>
       ) : (
         <div>
-          <div className="mb-2">
+          <div className="mb-2 text-slate-50">
             クリックすると各カテゴリの名前編集・削除画面に移動します。
           </div>
           <div className="flex flex-wrap gap-2">
@@ -219,7 +239,7 @@ const Page: React.FC = () => {
                 key={category.id}
                 className={twMerge(
                   "rounded-md px-2 py-0.5",
-                  "border border-slate-400 text-slate-500"
+                  "border border-slate-400 text-slate-50"
                 )}
               >
                 <Link href={`/admin/categories/${category.id}`}>

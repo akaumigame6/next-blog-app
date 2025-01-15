@@ -6,8 +6,8 @@ import type { PostApiResponse } from "@/app/_types/PostApiResponse";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { twMerge } from "tailwind-merge";
-import { Category } from "@/app/_types/Category";
 import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
+import Link from "next/link";
 
 // カテゴリをフェッチしたときのレスポンスのデータ型
 type CategoryApiResponse = {
@@ -251,7 +251,7 @@ const Page: React.FC = () => {
   // カテゴリをウェブAPIから取得中の画面
   if (!isInitialized) {
     return (
-      <div className="text-gray-500">
+      <div className="text-slate-50">
         <FontAwesomeIcon icon={faSpinner} className="mr-1 animate-spin" />
         Loading...
       </div>
@@ -266,7 +266,24 @@ const Page: React.FC = () => {
   // カテゴリ取得完了後の画面
   return (
     <main>
-      <div className="mb-4 text-2xl font-bold">投稿記事の編集</div>
+      <div className="mb-4 text-2xl font-bold text-slate-50">
+        投稿記事の編集
+      </div>
+
+      <div className="mb-3 flex items-end justify-end">
+        <Link href="/admin/posts">
+          <button
+            type="submit"
+            className={twMerge(
+              "rounded-md px-5 py-1 font-bold",
+              "bg-teal-500 text-white hover:bg-teal-700",
+              "disabled:cursor-not-allowed disabled:opacity-50"
+            )}
+          >
+            記事の変更の破棄
+          </button>
+        </Link>
+      </div>
 
       {isSubmitting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -285,7 +302,7 @@ const Page: React.FC = () => {
         className={twMerge("mb-4 space-y-4", isSubmitting && "opacity-50")}
       >
         <div className="space-y-1">
-          <label htmlFor="title" className="block font-bold">
+          <label htmlFor="title" className="block font-bold text-slate-50">
             タイトル
           </label>
           <input
@@ -310,7 +327,7 @@ const Page: React.FC = () => {
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="content" className="block font-bold">
+          <label htmlFor="content" className="block font-bold text-slate-50">
             本文
           </label>
           <textarea
@@ -324,7 +341,7 @@ const Page: React.FC = () => {
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="url" className="block font-bold">
+          <label htmlFor="url" className="block font-bold text-slate-50">
             カバーイメージ(URL)
           </label>
           <input
@@ -339,7 +356,7 @@ const Page: React.FC = () => {
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="name" className="block font-bold">
+          <label htmlFor="name" className="block font-bold text-slate-50">
             カテゴリ
           </label>
           <div className="flex flex-wrap gap-x-3.5">
@@ -353,7 +370,7 @@ const Page: React.FC = () => {
                     className="mt-0.5 cursor-pointer"
                     onChange={() => switchCategoryState(c.id)}
                   />
-                  <span className="cursor-pointer">{c.name}</span>
+                  <span className="cursor-pointer text-slate-50">{c.name}</span>
                 </label>
               ))
             ) : (

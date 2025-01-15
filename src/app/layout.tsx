@@ -20,7 +20,7 @@ const RootLayout: React.FC<Props> = (props) => {
   const { children } = props;
   return (
     <html lang="ja">
-      <body className="bg-teal-900">
+      <body className="bg-sky-950">
         <Header />
         <div className="mx-4 mt-2 max-w-2xl md:mx-auto ">{children}</div>
       </body>
