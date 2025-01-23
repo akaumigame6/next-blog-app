@@ -9,6 +9,8 @@ type RouteParams = {
   };
 };
 
+export const revalidate = 0; // ◀ サーバサイドのキャッシュを無効化する設定
+
 export const GET = async (req: NextRequest, routeParams: RouteParams) => {
   try {
     const id = routeParams.params.id;
