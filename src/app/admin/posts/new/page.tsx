@@ -6,6 +6,7 @@ import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { twMerge } from "tailwind-merge";
 import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
+import { useAuth } from "@/app/_hooks/useAuth";
 
 // カテゴリをフェッチしたときのレスポンスのデータ型
 type CategoryApiResponse = {
@@ -34,6 +35,7 @@ const Page: React.FC = () => {
   const [newPostImageURL, setNewPostImageURL] = useState("");
 
   const router = useRouter();
+  const { token } = useAuth(); // トークンの取得
 
   // カテゴリ配列 (State)。取得中と取得失敗時は null、既存カテゴリが0個なら []
   const [checkableCategories, setCheckableCategories] = useState<
@@ -132,6 +134,10 @@ const Page: React.FC = () => {
 
     //ウェブAPI (/api/admin/posts) にPOSTリクエストを送信する処理
     try {
+      if (!token) {
+        window.alert("予期せぬ動作：トークンが取得できません。");
+        return;
+      }
       const requestBody = {
         title: newPostTitle,
         content: newPostContent,
@@ -147,6 +153,7 @@ const Page: React.FC = () => {
         cache: "no-store",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token,
         },
         body: JSON.stringify(requestBody),
       });

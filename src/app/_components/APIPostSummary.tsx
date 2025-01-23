@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import { twMerge } from "tailwind-merge";
 import DOMPurify from "isomorphic-dompurify";
 import Link from "next/link";
+import { useAuth } from "@/app/_hooks/useAuth";
 
 type Props = {
   post: Post;
@@ -25,8 +26,7 @@ const PostSummary: React.FC<Props> = (props) => {
   // });
 
   const router = useRouter();
-
-  let change = 1;
+  const { token } = useAuth(); // トークンの取得
 
   // 「削除」のボタンが押下されたときにコールされる関数
   const handleDelete = async () => {
@@ -35,11 +35,18 @@ const PostSummary: React.FC<Props> = (props) => {
       return;
     }
     try {
+      if (!token) {
+        window.alert("予期せぬ動作：トークンが取得できません。");
+        return;
+      }
       props.setIsSubmitting(true);
       const requestUrl = `/api/admin/posts/${post.id}`;
       const res = await fetch(requestUrl, {
         method: "DELETE",
         cache: "no-store",
+        headers: {
+          Authorization: token, // ◀ 追加
+        },
       });
 
       if (!res.ok) {

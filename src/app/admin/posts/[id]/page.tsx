@@ -8,6 +8,7 @@ import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { twMerge } from "tailwind-merge";
 import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
+import { useAuth } from "@/app/_hooks/useAuth";
 
 // カテゴリをフェッチしたときのレスポンスのデータ型
 type CategoryApiResponse = {
@@ -39,6 +40,7 @@ const Page: React.FC = () => {
   const { id } = useParams() as { id: string };
 
   const router = useRouter();
+  const { token } = useAuth();
 
   // カテゴリ配列 (State)。取得中と取得失敗時は null、既存カテゴリが0個なら []
   const [checkableCategories, setCheckableCategories] = useState<
@@ -179,9 +181,12 @@ const Page: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // これを実行しないと意図せずページがリロードされるので注意
     setIsSubmitting(true);
-
     //ウェブAPI (/api/admin/posts) にPUTリクエストを送信する処理
     try {
+      if (!token) {
+        window.alert("予期せぬ動作：トークンが取得できません。");
+        return;
+      }
       const requestBody = {
         title: newPostTitle,
         content: newPostContent,
@@ -197,6 +202,7 @@ const Page: React.FC = () => {
         cache: "no-store",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token,
         },
         body: JSON.stringify(requestBody),
       });
@@ -226,10 +232,17 @@ const Page: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      if (!token) {
+        window.alert("予期せぬ動作：トークンが取得できません。");
+        return;
+      }
       const requestUrl = `/api/admin/posts/${id}`;
       const res = await fetch(requestUrl, {
         method: "DELETE",
         cache: "no-store",
+        headers: {
+          Authorization: token,
+        },
       });
 
       if (!res.ok) {

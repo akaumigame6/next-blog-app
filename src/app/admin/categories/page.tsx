@@ -7,6 +7,7 @@ import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { twMerge } from "tailwind-merge";
 import { Category } from "@/app/_types/Category";
 import Link from "next/link";
+import { useAuth } from "@/app/_hooks/useAuth";
 
 // カテゴリをフェッチしたときのレスポンスのデータ型
 type RawApiCategoryResponse = {
@@ -25,6 +26,8 @@ const Page: React.FC = () => {
   // カテゴリ配列 (State)。取得中と取得失敗時は null、既存カテゴリが0個なら []
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [posts, setPosts] = useState<Post[] | null>(null);
+
+  const { token } = useAuth(); // トークンの取得
 
   // ウェブAPI (/api/categories) からカテゴリの一覧をフェッチする関数の定義
   const fetchCategories = async () => {
@@ -148,10 +151,17 @@ const Page: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      if (!token) {
+        window.alert("予期せぬ動作：トークンが取得できません。");
+        return;
+      }
       const requestUrl = `/api/admin/categories/${category.id}`;
       const res = await fetch(requestUrl, {
         method: "DELETE",
         cache: "no-store",
+        headers: {
+          Authorization: token, // ◀ 追加
+        },
       });
 
       if (!res.ok) {

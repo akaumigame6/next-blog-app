@@ -7,6 +7,7 @@ import { twMerge } from "tailwind-merge";
 import { Category } from "@/app/_types/Category";
 import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
+import { useAuth } from "@/app/_hooks/useAuth";
 
 // カテゴリをフェッチしたときのレスポンスのデータ型
 type CategoryApiResponse = {
@@ -34,6 +35,7 @@ const Page: React.FC = () => {
 
   // ページの移動に使用するフック
   const router = useRouter();
+  const { token } = useAuth(); // トークンの取得
 
   // カテゴリ配列 (State)。取得中と取得失敗時は null、既存カテゴリが0個なら []
   const [categories, setCategories] = useState<Category[] | null>(null);
@@ -116,12 +118,17 @@ const Page: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      if (!token) {
+        window.alert("予期せぬ動作：トークンが取得できません。");
+        return;
+      }
       const requestUrl = `/api/admin/categories/${id}`;
       const res = await fetch(requestUrl, {
         method: "PUT",
         cache: "no-store",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token,
         },
         body: JSON.stringify({ name: newCategoryName }),
       });
@@ -153,10 +160,17 @@ const Page: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      if (!token) {
+        window.alert("予期せぬ動作：トークンが取得できません。");
+        return;
+      }
       const requestUrl = `/api/admin/categories/${id}`;
       const res = await fetch(requestUrl, {
         method: "DELETE",
         cache: "no-store",
+        headers: {
+          Authorization: token, // ◀ 追加
+        },
       });
 
       if (!res.ok) {
